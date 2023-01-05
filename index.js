@@ -1,8 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
-const { createUser } = require("./Users");
-
+const { createUser, existUser } = require("./controllers/UsersController");
 const { Server: HttpServer } = require("http");
 const { Server: IOServer } = require("socket.io");
 const app = express();
@@ -12,9 +11,11 @@ const Config = require("./config");
 const cookieParser = require("cookie-parser");
 const userModel = require("./models/User.model");
 const MongoStore = require("connect-mongo");
-const { isValidPassword, loggerDeclaration, auth } = require("./tools/utils");
+const { isValidPassword, loggerDeclaration, auth, getDataUser } = require("./tools/utils");
 const parseArgs = require("minimist");
 const routerSession = require("./api/routerSession")
+const routerProduct = require("./api/routerProduct")
+const routerCart = require("./api/routerCart")
 
 //loggers
 const logger = loggerDeclaration()
@@ -22,6 +23,8 @@ const logger = loggerDeclaration()
 //passport imports
 const passport = require("passport");
 const { Strategy } = require("passport-local");
+const { getProducts } = require("./controllers/ProductsController");
+const { createEmptyCart } = require("./controllers/CartController");
 const LocalStrategy = Strategy;
 
 //servidor
@@ -46,6 +49,8 @@ app.use(
 
 /*------------Routers-----------*/
 app.use("/session", routerSession)
+app.use("/productos", routerProduct)
+app.use("/carrito", routerCart)
 
 
 //Puerto enviado por ARGS
@@ -59,7 +64,7 @@ mongoose.connect(
   },
   (err) => {
     if (err) throw new Error(`Error de conexión a la base de datos ${err}`);
-    console.log("Base de datos conectada");
+    logger.info("Base de datos conectada");
   }
 );
 
@@ -79,7 +84,7 @@ passport.use(
             email,
           },
           (err, user) => {
-            console.log(user);
+            logger.info(user);
             if (err) {
               return done(err, null);
             }
@@ -124,39 +129,22 @@ app.post(
   passport.authenticate("login", {
     failureRedirect: "/login-error",
   }),
-  routerSession,
-  (req, res) => {
+  async (req, res) => {
     logger.info("Peticion POST a ruta '/login'")
     req.session.email = req.body.email;
-    res.redirect("/home");
+    res.redirect('/home')
   }
 );
 
-app.get("/home", auth, (req, res) => {
-  logger.info("Peticion GET a ruta '/home'")
-  res.render("formulario", { email: req.session.email });
-});
-
-app.get("/register", (req, res) => {
-  logger.info("Peticion GET a ruta '/register'")
-  res.render("register");
-});
-
-app.post("/register", (req, res) => {
-  logger.info("Peticion POST a ruta '/register'")
-  logger.info("req.body", req.body)
-  res.send(req.body)
-  /* try {
-    const hashPassword = createHash(req.body.password);
-    const newUser = { email: req.body.email, password: hashPassword };
-    if (createUser(newUser)) {
-      res.redirect("/");
-    } else {
-      res.render("register-error");
-    }
-  } catch (error) {
-    res.render("register-error");
-  } */
+app.get("/home", auth, async (req, res) => {
+  logger.info("Peticion GET a ruta '/home'");
+  const logedUser = await getDataUser(req.session.email);
+  const response = {
+    products: await getProducts(),
+    cart: await createEmptyCart(logedUser.email, logedUser.address),
+    user: logedUser,
+  };
+  res.send(response);
 });
 
 app.post("/logout", (req, res) => {
@@ -177,39 +165,6 @@ app.get("/register-error", (req, res) => {
 app.get("/login-error", (req, res) => {
   logger.info("Peticion GET a ruta '/login-error'")
   res.render("login-error");
-});
-
-app.get("/test-mensaje", (req, res) => {
-  logger.info("Peticion GET a ruta '/test-mensaje'")
-  res.send(testNormalizr());
-});
-
-app.get("/info", async (req, res) => {
-  logger.info("Peticion GET a ruta '/info'")
-  //La ruta info comprimida envia 946 Bytes y la ruta info sin comprimir envia 923 Bytes.
-  //En este caso la compression no esta achicando mucho la informacion
-  const infoData = {
-    arguments: parseArgs(process.argv.slice(2)),
-    plataform: process.platform,
-    nodeVersion: process.version,
-    rss: process.memoryUsage().rss,
-    execPath: process.execPath,
-    IdProcess: process.pid,
-    proyectFolder: process.cwd(),
-    numThreads
-  };
-  console.log('infoData', infoData);
-  res.render("info", { infoData });
-});
-
-app.get("/datos", (req, res) => {
-  logger.info("Peticion GET a ruta '/datos'")
-  console.log(`port ${PORT} -> FYH ${Date.now()}`);
-
-  res.send(`servidor express <span style="color:blueviolet;"> (NGINX)</span> 
-    en ${PORT} <b>PID: ${process.pid}</b> - ${new Date().toLocaleString()} as ${
-    process.argv
-  }`);
 });
 
 app.use('*',(req, res) => {

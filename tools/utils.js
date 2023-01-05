@@ -1,4 +1,5 @@
 const { faker } = require("@faker-js/faker");
+const userModel = require("../models/User.model");
 const bcrypt = require("bcrypt");
 const winston = require("winston");
 
@@ -29,9 +30,14 @@ const loggerDeclaration = () => {
   });
 };
 
+const getDataUser = async (email) => {
+  return await userModel.findOne({email});
+};
+
 module.exports = {
   auth,
   isValidPassword,
   createHash,
   loggerDeclaration,
+  getDataUser
 };
