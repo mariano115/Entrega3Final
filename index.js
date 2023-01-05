@@ -173,5 +173,5 @@ app.use('*',(req, res) => {
 })
 
 httpServer.listen(PORT, () =>
-  console.log("servidor Levantado en el puerto " + PORT)
+  logger.info("servidor Levantado en el puerto " + PORT)
 );

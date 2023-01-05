@@ -33,7 +33,6 @@ router.post("/register", (req, res) => {
 
 router.post("/logout", (req, res) => {
   logger.info("Peticion POST a ruta '/logout'")
-  console.log('req.query ', req.query);
   /* req.session.destroy((err) => {
     if (err) {
       return res.json({ success: "false", error: err });

@@ -18,14 +18,12 @@ const getCartById = async (id) => {
 
 const generatePurchaseSummary = async (cart) => {
   try {
-    console.log(cart.items);
     const itemsList = cart.items
       .map((item) => {
         return `Producto: ${item.product.description} Cantidad ${item.quantity} Categoria ${item.product.category} Precio C/U ${item.product.price}
         Photo ${item.product.photo} Total: ${item.product.price * item.quantity} <br> `;
       })
       .join("");
-    console.log(itemsList);
     return itemsList;
   } catch (error) {
     logger.warn("No se pudo crear el resumen de productos");
@@ -71,7 +69,6 @@ const addProductToCart = async (idProduct, idCart, cantidad) => {
         $push: { items: { product: productToAdd, quantity: cantidad } },
       }
     );
-    console.log("cart", cart);
     if (cart.modifiedCount > 0) {
       return true;
     } else {
