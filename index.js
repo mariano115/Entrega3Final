@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
+const path = require('path');
 const { createUser, existUser } = require("./controllers/UsersController");
 const { Server: HttpServer } = require("http");
 const { Server: IOServer } = require("socket.io");
@@ -29,6 +30,7 @@ const LocalStrategy = Strategy;
 
 //servidor
 app.use(express.urlencoded({ extended: true }));
+app.use("/public", express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(cors());
 

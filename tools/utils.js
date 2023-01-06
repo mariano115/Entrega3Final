@@ -2,6 +2,9 @@ const { faker } = require("@faker-js/faker");
 const userModel = require("../models/User.model");
 const bcrypt = require("bcrypt");
 const winston = require("winston");
+const fs = require("fs");
+const axios = require("axios");
+const Config = require("../config");
 
 const isValidPassword = (user, password) => {
   return bcrypt.compareSync(password, user.password);
@@ -31,7 +34,28 @@ const loggerDeclaration = () => {
 };
 
 const getDataUser = async (email) => {
-  return await userModel.findOne({email});
+  return await userModel.findOne({ email });
+};
+
+const downloadPicAndSaveInAvatars = (url, image_path) => {
+  try {
+    axios({
+      url,
+      responseType: "stream",
+    }).then(
+      (response) =>
+        new Promise((resolve, reject) => {
+          response.data
+            .pipe(
+              fs.createWriteStream(Config.publicAvatarsUrl + image_path)
+            )
+            .on("finish", () => resolve())
+            .on("error", (e) => reject(e));
+        })
+    );
+  } catch (error) {
+    return false;
+  }
 };
 
 module.exports = {
@@ -39,5 +63,6 @@ module.exports = {
   isValidPassword,
   createHash,
   loggerDeclaration,
-  getDataUser
+  getDataUser,
+  downloadPicAndSaveInAvatars,
 };
