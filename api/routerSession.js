@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const { createHash, loggerDeclaration, getDataUser } = require("../tools/utils");
+const { createHash, loggerDeclaration, getDataUser, auth } = require("../tools/utils");
 const { createUser } = require("../controllers/UsersController");
 const { getCartById, generatePurchaseSummary } = require("../controllers/CartController");
 const enviarMail = require("../tools/mails");
 const Config = require("../config");
 const logger = loggerDeclaration()
 
-router.post("/register", (req, res) => {
+router.post("/register", async (req, res) => {
   logger.info("Peticion POST a ruta '/register'");
   
   try {
@@ -21,7 +21,7 @@ router.post("/register", (req, res) => {
         phone: req.body.phone,
         photo: req.body.photo,
       };
-    if (createUser(newUser)) {
+    if (await createUser(newUser)) {
       res.send('Usuario Creado');
     } else {
       res.send("No se pudo crear el usuario");
@@ -31,17 +31,23 @@ router.post("/register", (req, res) => {
   }
 });
 
-router.post("/logout", (req, res) => {
+
+
+router.get("/logout", auth, (req, res) => {
   logger.info("Peticion POST a ruta '/logout'")
-  /* req.session.destroy((err) => {
-    if (err) {
-      return res.json({ success: "false", error: err });
-    }
-    res.render("bye", { nombre: req.query.email });
-  }); */
+  try {
+    res.clearCookie('currentSession')
+    req.session.destroy()
+    res.status(200).json({
+      status: 'success',
+      message: 'Session closed',
+    })
+  } catch (e) {
+      res.status(500).json({ status: 'error', message: 'Logout error' })
+  }
 });
 
-router.post("/finishbuy", async (req, res) => {
+router.post("/finishbuy", auth, async (req, res) => {
   const cart = await getCartById(req.body.idCarrito)
   const user = await getDataUser(cart.email)
   const emailText = await generatePurchaseSummary(cart)

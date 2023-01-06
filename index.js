@@ -2,7 +2,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const path = require('path');
-const { createUser, existUser } = require("./controllers/UsersController");
 const { Server: HttpServer } = require("http");
 const { Server: IOServer } = require("socket.io");
 const app = express();
@@ -147,26 +146,6 @@ app.get("/home", auth, async (req, res) => {
     user: logedUser,
   };
   res.send(response);
-});
-
-app.post("/logout", (req, res) => {
-  logger.info("Peticion POST a ruta '/logout'")
-  req.session.destroy((err) => {
-    if (err) {
-      return res.json({ success: "false", error: err });
-    }
-    res.render("bye", { nombre: req.query.email });
-  });
-});
-
-app.get("/register-error", (req, res) => {
-  logger.info("Peticion GET a ruta '/register-error'")
-  res.render("register-error");
-});
-
-app.get("/login-error", (req, res) => {
-  logger.info("Peticion GET a ruta '/login-error'")
-  res.render("login-error");
 });
 
 app.use('*',(req, res) => {

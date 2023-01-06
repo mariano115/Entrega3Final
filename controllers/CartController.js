@@ -3,13 +3,17 @@ const { getProductById } = require("./ProductsController");
 const { loggerDeclaration } = require("../tools/utils");
 const logger = loggerDeclaration();
 
-/* const getCarts = async () => {
-    const carts = await cartModel.find()
-    return carts? carts: {error: "there aren't carts"}
-} */
+const getCarts = async () => {
+    try {
+      return await cartModel.find()
+    } catch (error) {
+      return { error: "cart not found" };
+    }
+}
 
 const getCartById = async (id) => {
   try {
+    console.log(await cartModel.findById(id))
     return await cartModel.findById(id);
   } catch (error) {
     return { error: "cart not found" };
@@ -30,35 +34,6 @@ const generatePurchaseSummary = async (cart) => {
     return error;
   }
 };
-
-/* const addCart = async () => {
-    return await this.saveObject() 
-} */
-
-/* const deleteCartById = async (id) => {
-    try {
-        return await this.deleteById(id)
-    } catch (error) {
-        return { error: "cart not found" }
-    }
-}
-const updateCart = async (id, cart) => {
-    try {
-        if (
-            cart !== undefined
-            && cart.products !== undefined
-        ){
-            cart._id = id
-            await this.updateRow(cart)
-            return cart
-        }
-        else{
-            return { error: "the cart and products must be defined" }
-        }
-    } catch (error) {
-        return { error: "cart not found" }
-    }
-} */
 
 const addProductToCart = async (idProduct, idCart, cantidad) => {
   try {
@@ -90,8 +65,9 @@ const createEmptyCart = async (email, address) => {
 };
 
 module.exports = {
-  /* getProducts, addProduct, getProductById*/ getCartById,
+  getCartById,
   addProductToCart,
   createEmptyCart,
   generatePurchaseSummary,
+  getCarts
 };

@@ -1,21 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const { createHash, loggerDeclaration } = require("../tools/utils");
-const { getProducts, addProduct } = require("../controllers/ProductsController");
-const { addProductToCart } = require("../controllers/CartController");
+const { loggerDeclaration, auth, validateAdmin } = require("../tools/utils");
+const { addProductToCart, getCarts, getCartById } = require("../controllers/CartController");
 const logger = loggerDeclaration();
 
-router.get("/", async (req, res) => {
-	/* const products = await getProducts()
-	res.send(products) */
+router.get("/", auth, validateAdmin, async (req, res) => {
+	res.send(await getCarts())
 })
 
-router.get("/:id", async (req, res) => {
-	/* const product = await productsController.getProductById(req.params.id)
-	res.send(product) */
+router.get("/:id", auth, async (req, res) => {
+	res.send(await getCartById(req.params.id))
 })
 
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
 	try {
 		if(await addProductToCart(req.body.idProducto, req.body.idCarrito, req.body.cantidad)){
 			logger.info('se pudo agregar el producto al carrito')
@@ -29,14 +26,10 @@ router.post("/", async (req, res) => {
 	}
 })
 
-router.delete("/:id", /* validateAdmin, */ async (req, res) => {
-	/* const product = await productsController.deleteProductById(req.params.id)
-	res.send(product) */
+router.delete("/:id", auth, validateAdmin, async (req, res) => {
 })
 
-router.put("/:id", /* validateAdmin, */ async (req, res) => {
-        /* let newproduct = await productsController.updateProduct(req.params.id, req.body)
-        res.send(newproduct) */
+router.put("/:id", auth, validateAdmin, async (req, res) => {
 })
 
 module.exports = router;

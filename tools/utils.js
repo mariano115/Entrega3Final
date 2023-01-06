@@ -1,4 +1,3 @@
-const { faker } = require("@faker-js/faker");
 const userModel = require("../models/User.model");
 const bcrypt = require("bcrypt");
 const winston = require("winston");
@@ -18,7 +17,7 @@ const auth = (req, res, next) => {
   if (req.session?.email) {
     next();
   } else {
-    res.render("login");
+    res.send("Deberas loguearte primero para acceder");
   }
 };
 
@@ -58,6 +57,14 @@ const downloadPicAndSaveInAvatars = (url, image_path) => {
   }
 };
 
+const validateAdmin = (req, res, next) => {
+  if (req.query?.admin == 'true') {
+    next();
+  } else {
+    res.send({error:-1, description:`route ${req.protocol}://${req.get('host')}${req.originalUrl} method ${req.method} not authorized`, })
+  }
+}
+
 module.exports = {
   auth,
   isValidPassword,
@@ -65,4 +72,5 @@ module.exports = {
   loggerDeclaration,
   getDataUser,
   downloadPicAndSaveInAvatars,
+  validateAdmin
 };

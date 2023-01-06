@@ -6,6 +6,8 @@ const getProducts = async () => {
 
 const getProductById = async (id) => {
   try {
+    console.log(id)
+    console.log('producto', await productsModel.findById(id))
     return await productsModel.findById(id);
   } catch (error) {
     return { error: "product not found" };
